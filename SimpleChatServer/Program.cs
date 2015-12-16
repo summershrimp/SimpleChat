@@ -60,10 +60,8 @@ namespace SimpleChatServer
                         throw new Exception("no nickname");
                     client.Nickname = msg.Nickname;
                     userList.Add(client.Nickname, client);
-                    PrivateMessage emsg = new PrivateMessage("System", "client.Nickname", "Hello!");
-                    string str = JsonConvert.SerializeObject(emsg).ToString();
-                    sendbuffer = System.Text.Encoding.UTF8.GetBytes(str);
-                    client.Client.Send(sendbuffer);
+                    PublicMessage emsg = new PublicMessage("System", "Welcome " + msg.Nickname);
+                    doPublicMessage(emsg);
                     online = true;
                 }
                 catch (SocketException)
@@ -110,7 +108,14 @@ namespace SimpleChatServer
                 {
                     continue;
                 }
-                ((ClientInfo)de.Value).Client.Send(sendbuffer);
+                try
+                {
+                    ((ClientInfo)de.Value).Client.Send(sendbuffer);
+                }
+                catch(SocketException)
+                {
+                    //ignore
+                }
             }
         }
 

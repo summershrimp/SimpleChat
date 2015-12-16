@@ -11,7 +11,7 @@ namespace SimpleChatCommon.Messages
         public String FromNick { get; set; }
         public String Content { get; set; }
         PublicMessage() : base("public") { }
-        PublicMessage(string from, string msg) : base("public")
+        public PublicMessage(string from, string msg) : base("public")
         {
             FromNick = from;
             Content = msg;
