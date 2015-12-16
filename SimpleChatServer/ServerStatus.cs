@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace SimpleChatServer
 {
-    public partial class Form1 : Form
+    public partial class ServerStatus : Form
     {
-        public Form1()
+        public ServerStatus()
         {
             InitializeComponent();
         }
