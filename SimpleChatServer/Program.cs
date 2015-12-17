@@ -30,6 +30,7 @@ namespace SimpleChatServer
         [STAThread]
         static void Main()
         {
+			threadList = new List<Thread>();
             IPAddress ip = IPAddress.Parse("0.0.0.0");
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             serverSocket.Bind(new IPEndPoint(ip, 8500));
@@ -57,7 +58,7 @@ namespace SimpleChatServer
                     threadList.Add(clientThread);
                     clientThread.Start(client);
                 }
-                catch (SocketException )
+                catch (SocketException)
                 {
                     break;
                 }
