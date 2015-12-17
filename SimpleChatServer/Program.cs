@@ -10,6 +10,7 @@ using System.Collections;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 using SimpleChatCommon.Messages;
+using SimpleChatCommon;
 namespace SimpleChatServer
 {
     static class Program
@@ -28,6 +29,7 @@ namespace SimpleChatServer
             serverSocket.Bind(new IPEndPoint(ip, 8500));
             serverSocket.Listen(10);
             Thread acceptThread = new Thread(AcceptClient);
+            acceptThread.Start();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new ServerStatus());
@@ -46,17 +48,15 @@ namespace SimpleChatServer
 
         private static void Worker(object clientObj)
         {
-            byte[] buffer = new byte[4096];
-            byte[] sendbuffer;
             ClientInfo client = (ClientInfo)clientObj;
             bool online = false;
             while (client.Nickname == null || client.Nickname.Length == 0)
             {
-                client.Client.Receive(buffer);
                 try
                 {
-                    LoginMessage msg = (LoginMessage)JsonConvert.DeserializeObject(System.Text.ASCIIEncoding.UTF8.GetString(buffer));
-                    if (msg.MsgType.Equals("login") || msg.Nickname != null || msg.Nickname.Length == 0 || msg.Nickname.ToLower().Equals("system") || userList.ContainsKey(msg.Nickname))
+                    string str = Common.doReceive(client.Client);
+                    LoginMessage msg = JsonConvert.DeserializeObject<LoginMessage>(str);
+                    if (!msg.MsgType.Equals("login") || msg.Nickname == null || msg.Nickname.Length == 0 || msg.Nickname.ToLower().Equals("system") || userList.ContainsKey(msg.Nickname))
                         throw new Exception("no nickname");
                     client.Nickname = msg.Nickname;
                     userList.Add(client.Nickname, client);
@@ -77,7 +77,8 @@ namespace SimpleChatServer
             {
                 try
                 {
-                    BaseMessage msg = (BaseMessage)JsonConvert.DeserializeObject(System.Text.ASCIIEncoding.UTF8.GetString(buffer));
+                    string t = Common.doReceive(client.Client);
+                    BaseMessage msg = (BaseMessage)JsonConvert.DeserializeObject(t);
                     switch (msg.MsgType)
                     {
                         case "public": doPublicMessage((PublicMessage)msg); break;
@@ -99,9 +100,7 @@ namespace SimpleChatServer
 
         private static void doPublicMessage(PublicMessage msg)
         {
-            byte[] sendbuffer;
             string str = JsonConvert.SerializeObject(msg).ToString();
-            sendbuffer = System.Text.Encoding.UTF8.GetBytes(str);
             foreach (DictionaryEntry de in userList)
             {
                 if (de.Key.Equals(msg.FromNick))
@@ -110,7 +109,7 @@ namespace SimpleChatServer
                 }
                 try
                 {
-                    ((ClientInfo)de.Value).Client.Send(sendbuffer);
+                    Common.doSend(((ClientInfo)de.Value).Client, str);
                 }
                 catch(SocketException)
                 {
@@ -121,13 +120,12 @@ namespace SimpleChatServer
 
         private static void doPrivateMessage(PrivateMessage msg)
         {
-            byte[] sendbuffer;
             string str = JsonConvert.SerializeObject(msg).ToString();
-            sendbuffer = System.Text.Encoding.UTF8.GetBytes(str);
+            
             if (userList.Contains(msg.ToNick))
             {
                 ClientInfo de = (ClientInfo)userList[msg.ToNick];
-                ((ClientInfo)de).Client.Send(sendbuffer);
+                Common.doSend(de.Client, str);
             }
             else
             {
@@ -136,11 +134,11 @@ namespace SimpleChatServer
         }
         private static void doErrorMessage(ClientInfo client, string msg)
         {
-            byte[] sendbuffer;
             ErrorMessage emsg = new ErrorMessage(msg);
             string str = JsonConvert.SerializeObject(emsg).ToString();
-            sendbuffer = System.Text.Encoding.UTF8.GetBytes(str);
-            client.Client.Send(sendbuffer);
+           
+            Common.doSend(client.Client, str);
         }
+
     }
 }
