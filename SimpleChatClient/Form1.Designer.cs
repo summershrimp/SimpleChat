@@ -28,16 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
+			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.btnNewChat = new System.Windows.Forms.Button();
 			this.txtInput = new System.Windows.Forms.TextBox();
-			this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+			this.txtMsg = new System.Windows.Forms.RichTextBox();
 			this.btnSend = new System.Windows.Forms.Button();
 			this.lblServerInfo = new System.Windows.Forms.Label();
 			this.lblUserInfo = new System.Windows.Forms.Label();
 			this.lblStatus = new System.Windows.Forms.Label();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.btnClear = new System.Windows.Forms.Button();
+			this.lblMsgType = new System.Windows.Forms.Label();
+			this.timer1 = new System.Windows.Forms.Timer(this.components);
 			this.panel1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -57,25 +60,31 @@
 			// 
 			// txtInput
 			// 
+			this.txtInput.AcceptsReturn = true;
+			this.txtInput.AcceptsTab = true;
 			this.txtInput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
 			this.txtInput.BorderStyle = System.Windows.Forms.BorderStyle.None;
+			this.txtInput.ForeColor = System.Drawing.Color.White;
+			this.txtInput.HideSelection = false;
 			this.txtInput.Location = new System.Drawing.Point(15, 290);
 			this.txtInput.Multiline = true;
 			this.txtInput.Name = "txtInput";
 			this.txtInput.ReadOnly = true;
 			this.txtInput.Size = new System.Drawing.Size(595, 96);
 			this.txtInput.TabIndex = 1;
+			this.txtInput.TextChanged += new System.EventHandler(this.txtInput_TextChanged);
 			// 
-			// richTextBox1
+			// txtMsg
 			// 
-			this.richTextBox1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-			this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-			this.richTextBox1.Location = new System.Drawing.Point(15, 33);
-			this.richTextBox1.Name = "richTextBox1";
-			this.richTextBox1.ReadOnly = true;
-			this.richTextBox1.Size = new System.Drawing.Size(595, 240);
-			this.richTextBox1.TabIndex = 2;
-			this.richTextBox1.Text = "";
+			this.txtMsg.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+			this.txtMsg.BorderStyle = System.Windows.Forms.BorderStyle.None;
+			this.txtMsg.ForeColor = System.Drawing.Color.White;
+			this.txtMsg.Location = new System.Drawing.Point(15, 33);
+			this.txtMsg.Name = "txtMsg";
+			this.txtMsg.ReadOnly = true;
+			this.txtMsg.Size = new System.Drawing.Size(595, 240);
+			this.txtMsg.TabIndex = 2;
+			this.txtMsg.Text = "";
 			// 
 			// btnSend
 			// 
@@ -88,6 +97,7 @@
 			this.btnSend.TabStop = false;
 			this.btnSend.Text = "发送(&S)";
 			this.btnSend.UseVisualStyleBackColor = false;
+			this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
 			// 
 			// lblServerInfo
 			// 
@@ -113,9 +123,9 @@
 			this.lblStatus.AutoSize = true;
 			this.lblStatus.Location = new System.Drawing.Point(12, 6);
 			this.lblStatus.Name = "lblStatus";
-			this.lblStatus.Size = new System.Drawing.Size(68, 17);
+			this.lblStatus.Size = new System.Drawing.Size(44, 17);
 			this.lblStatus.TabIndex = 7;
-			this.lblStatus.Text = "状态：就绪";
+			this.lblStatus.Text = "就绪。";
 			// 
 			// panel1
 			// 
@@ -137,6 +147,21 @@
 			this.btnClear.TabStop = false;
 			this.btnClear.Text = "清空(&C)";
 			this.btnClear.UseVisualStyleBackColor = false;
+			this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+			// 
+			// lblMsgType
+			// 
+			this.lblMsgType.Location = new System.Drawing.Point(102, 397);
+			this.lblMsgType.Name = "lblMsgType";
+			this.lblMsgType.Size = new System.Drawing.Size(351, 33);
+			this.lblMsgType.TabIndex = 9;
+			this.lblMsgType.Text = "全体消息";
+			this.lblMsgType.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+			// 
+			// timer1
+			// 
+			this.timer1.Interval = 1000;
+			this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
 			// 
 			// Form1
 			// 
@@ -145,12 +170,13 @@
 			this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
 			this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
 			this.ClientSize = new System.Drawing.Size(624, 467);
+			this.Controls.Add(this.lblMsgType);
 			this.Controls.Add(this.panel1);
 			this.Controls.Add(this.lblUserInfo);
 			this.Controls.Add(this.lblServerInfo);
 			this.Controls.Add(this.btnClear);
 			this.Controls.Add(this.btnSend);
-			this.Controls.Add(this.richTextBox1);
+			this.Controls.Add(this.txtMsg);
 			this.Controls.Add(this.txtInput);
 			this.Controls.Add(this.btnNewChat);
 			this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -172,13 +198,15 @@
 
 		private System.Windows.Forms.Button btnNewChat;
 		private System.Windows.Forms.TextBox txtInput;
-		private System.Windows.Forms.RichTextBox richTextBox1;
+		private System.Windows.Forms.RichTextBox txtMsg;
 		private System.Windows.Forms.Button btnSend;
 		private System.Windows.Forms.Label lblServerInfo;
 		private System.Windows.Forms.Label lblUserInfo;
 		private System.Windows.Forms.Label lblStatus;
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.Button btnClear;
+		private System.Windows.Forms.Label lblMsgType;
+		private System.Windows.Forms.Timer timer1;
 	}
 }
 

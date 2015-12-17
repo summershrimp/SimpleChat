@@ -23,47 +23,41 @@ namespace SimpleChatClient
         [STAThread]
         static void Main()
         {
-            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            Connect("127.0.0.1");
-            setNickname("nihao");
-            SendLogin();
-            SendPublic("hahaha");
-            BaseMessage pmsg = (BaseMessage) Receive();
-            Console.Out.WriteLine(pmsg.MsgType);
-            Application.EnableVisualStyles();
+			clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
         }
 
-        static void Connect(string ip)
+        public static void Connect(string ip)
         {
             ipAddr = ip;
             clientSocket.Connect(new IPEndPoint(IPAddress.Parse(ip), 8500));
         }
-        static void setNickname(string nickname)
+        public static void setNickname(string nickname)
         {
             Nickname = nickname;
         }
-        static void SendPublic(string msg)
+        public static void SendPublic(string msg)
         {
             PublicMessage pmsg = new PublicMessage(Nickname, msg);
             string str = JsonConvert.SerializeObject(pmsg).ToString();
             Common.doSend(clientSocket, str);
         }
-        static void SendPrivate(string toUser, string msg)
+        public static void SendPrivate(string toUser, string msg)
         {
             PrivateMessage pmsg = new PrivateMessage(Nickname, toUser, msg);
             string str = JsonConvert.SerializeObject(pmsg).ToString();
             Common.doSend(clientSocket, str);
         }
-        static void SendLogin()
+        public static void SendLogin()
         {
             LoginMessage pmsg = new LoginMessage(Nickname);
             string str = JsonConvert.SerializeObject(pmsg).ToString();
             Common.doSend(clientSocket, str);
         }
 
-        static BaseMessage Receive()
+        public static BaseMessage Receive()
         {
             JObject json;
             BaseMessage msg = null;
