@@ -9,6 +9,7 @@ using System.Threading;
 using System.Collections;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SimpleChatCommon.Messages;
 using SimpleChatCommon;
 namespace SimpleChatServer
@@ -17,7 +18,12 @@ namespace SimpleChatServer
     {
         static Socket serverSocket;
         static Hashtable userList = Hashtable.Synchronized(new Hashtable());
-  
+        static ServerStatus serverStatusForm;
+        static Thread acceptThread;
+        public delegate void AnnounceHandle(string name);
+        public static event AnnounceHandle AnnounceOnline;
+        public static event AnnounceHandle AnnounceOffline;
+        static List<Thread> threadList;
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
@@ -28,21 +34,33 @@ namespace SimpleChatServer
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             serverSocket.Bind(new IPEndPoint(ip, 8500));
             serverSocket.Listen(10);
-            Thread acceptThread = new Thread(AcceptClient);
+            acceptThread = new Thread(AcceptClient);
             acceptThread.Start();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ServerStatus());
+            Application.Run(serverStatusForm = new ServerStatus());
         }
 
+        public static void CloseSocket()
+        {
+            serverSocket.Close();
+        }
         private static void AcceptClient()
         {
             while (true)
             {
-                Socket clientsock = serverSocket.Accept();
-                ClientInfo client = new ClientInfo("",clientsock);
-                Thread clientThread = new Thread(Worker);
-                clientThread.Start(client);
+                try
+                {
+                    Socket clientsock = serverSocket.Accept();
+                    ClientInfo client = new ClientInfo("", clientsock);
+                    Thread clientThread = new Thread(Worker);
+                    threadList.Add(clientThread);
+                    clientThread.Start(client);
+                }
+                catch (SocketException )
+                {
+                    break;
+                }
             }
         }
 
@@ -62,39 +80,42 @@ namespace SimpleChatServer
                     userList.Add(client.Nickname, client);
                     PublicMessage emsg = new PublicMessage("System", "Welcome " + msg.Nickname);
                     doPublicMessage(emsg);
+                    AnnounceOnline(client.Nickname);
                     online = true;
                 }
                 catch (SocketException)
                 {
                     online = false;
                 }
-                catch (Exception e)
+                /*catch (Exception e)
                 {
                     doErrorMessage(client, e.Message);
-                }
+                }*/
             }
             while (online && client.Client.Connected)
             {
                 try
                 {
                     string t = Common.doReceive(client.Client);
-                    BaseMessage msg = (BaseMessage)JsonConvert.DeserializeObject(t);
-                    switch (msg.MsgType)
+                    JObject json = (JObject)JsonConvert.DeserializeObject(t);
+                    switch ((string)json.GetValue("MsgType"))
                     {
-                        case "public": doPublicMessage((PublicMessage)msg); break;
-                        case "private": doPrivateMessage((PrivateMessage)msg); break;
-                        default: throw new Exception("no such message");
+                        case "public": doPublicMessage(JsonConvert.DeserializeObject<PublicMessage>(t)); break;
+                        case "private": doPrivateMessage(JsonConvert.DeserializeObject<PrivateMessage>(t)); break;
+                        default: throw new Exception("no such kind of message");
 
                     }
                 }
                 catch (SocketException)
                 {
+                    AnnounceOffline(client.Nickname);
+                    userList.Remove(client.Nickname);
                     online = false;
                 }
-                catch (Exception e)
+                /*catch (Exception e)
                 {
                     doErrorMessage(client, e.Message);
-                }
+                }*/
             }
         }
 
@@ -138,6 +159,11 @@ namespace SimpleChatServer
             string str = JsonConvert.SerializeObject(emsg).ToString();
            
             Common.doSend(client.Client, str);
+        }
+
+        public static void End()
+        {
+            Application.Exit();
         }
 
     }

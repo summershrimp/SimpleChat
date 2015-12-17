@@ -28,12 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.UserList = new System.Windows.Forms.ListBox();
+            this.SuspendLayout();
+            // 
+            // UserList
+            // 
+            this.UserList.FormattingEnabled = true;
+            this.UserList.ItemHeight = 12;
+            this.UserList.Location = new System.Drawing.Point(12, 12);
+            this.UserList.Name = "UserList";
+            this.UserList.Size = new System.Drawing.Size(610, 316);
+            this.UserList.TabIndex = 0;
+            // 
+            // ServerStatus
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Text = "Form1";
+            this.ClientSize = new System.Drawing.Size(634, 344);
+            this.Controls.Add(this.UserList);
+            this.Name = "ServerStatus";
+            this.Text = "ServerStatus";
+            this.ResumeLayout(false);
+
         }
 
         #endregion
+
+        private System.Windows.Forms.ListBox UserList;
     }
 }
 
