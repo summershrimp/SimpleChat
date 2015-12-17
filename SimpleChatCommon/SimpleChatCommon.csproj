@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatException.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Messages\BaseMessage.cs" />
     <Compile Include="Messages\ErrorMessage.cs" />

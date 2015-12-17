@@ -75,7 +75,7 @@ namespace SimpleChatServer
                     string str = Common.doReceive(client.Client);
                     LoginMessage msg = JsonConvert.DeserializeObject<LoginMessage>(str);
                     if (!msg.MsgType.Equals("login") || msg.Nickname == null || msg.Nickname.Length == 0 || msg.Nickname.ToLower().Equals("system") || userList.ContainsKey(msg.Nickname))
-                        throw new Exception("no nickname");
+                        throw new ChatException("no nickname");
                     client.Nickname = msg.Nickname;
                     userList.Add(client.Nickname, client);
                     PublicMessage emsg = new PublicMessage("System", "Welcome " + msg.Nickname);
@@ -87,10 +87,10 @@ namespace SimpleChatServer
                 {
                     online = false;
                 }
-                /*catch (Exception e)
+                catch (ChatException e)
                 {
                     doErrorMessage(client, e.Message);
-                }*/
+                }
             }
             while (online && client.Client.Connected)
             {
@@ -102,7 +102,7 @@ namespace SimpleChatServer
                     {
                         case "public": doPublicMessage(JsonConvert.DeserializeObject<PublicMessage>(t)); break;
                         case "private": doPrivateMessage(JsonConvert.DeserializeObject<PrivateMessage>(t)); break;
-                        default: throw new Exception("no such kind of message");
+                        default: throw new ChatException("no such kind of message");
 
                     }
                 }
@@ -112,10 +112,10 @@ namespace SimpleChatServer
                     userList.Remove(client.Nickname);
                     online = false;
                 }
-                /*catch (Exception e)
+                catch (ChatException e)
                 {
                     doErrorMessage(client, e.Message);
-                }*/
+                }
             }
         }
 
@@ -150,7 +150,7 @@ namespace SimpleChatServer
             }
             else
             {
-                throw new Exception("no such user");
+                throw new ChatException("no such user");
             }
         }
         private static void doErrorMessage(ClientInfo client, string msg)
