@@ -15,7 +15,7 @@ namespace SimpleChatClient
     static class Program
     {
         static Socket clientSocket;
-        static string ipAddr = "127.0.0.1";
+        static IPAddress ipAddr;
         static string Nickname = "";
         /// <summary>
         /// 应用程序的主入口点。
@@ -31,8 +31,16 @@ namespace SimpleChatClient
 
         public static void Connect(string ip)
         {
-            ipAddr = ip;
-            clientSocket.Connect(new IPEndPoint(IPAddress.Parse(ip), 8500));
+            IPAddress[] ips = Dns.GetHostAddresses(ip);
+            foreach (IPAddress eip in ips)
+            {
+                if (eip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    ipAddr = eip;
+                    break;
+                }
+            }
+            clientSocket.Connect(new IPEndPoint(ipAddr, 8500));
         }
         public static void setNickname(string nickname)
         {
