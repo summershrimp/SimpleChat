@@ -64,6 +64,8 @@ namespace SimpleChatClient
             try
             {
                 string str = Common.doReceive(clientSocket);
+                if (str.Length == 0)
+                    throw new ChatException("Server Disconnect You");
                 json = (JObject)JsonConvert.DeserializeObject(str);
                 switch ((string)json.GetValue("MsgType"))
                 {
@@ -87,6 +89,11 @@ namespace SimpleChatClient
                 Console.Out.WriteLine(e.Message);
             }
             return msg;
+        }
+
+        public static void Disconnect()
+        {
+            clientSocket.Close();
         }
 
     }

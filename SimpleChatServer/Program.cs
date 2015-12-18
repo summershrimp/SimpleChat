@@ -98,6 +98,13 @@ namespace SimpleChatServer
                 try
                 {
                     string t = Common.doReceive(client.Client);
+                    if (t.Length == 0)
+                    {
+                        AnnounceOffline(client.Nickname);
+                        userList.Remove(client.Nickname);
+                        online = false;
+                        break;
+                    }
                     JObject json = (JObject)JsonConvert.DeserializeObject(t);
                     switch ((string)json.GetValue("MsgType"))
                     {

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net.Sockets;
 using SimpleChatCommon.Messages;
-
+using SimpleChatCommon;
 namespace SimpleChatClient
 {
     public partial class Form1 : Form
@@ -20,9 +20,18 @@ namespace SimpleChatClient
 		public Form1()
         {
             InitializeComponent();
+            receiveThread = new System.Threading.Thread(ReceiveThread);
+            this.FormClosed += Form1_FormClosed;
         }
 
-		private void statusError(string msg)
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Program.Disconnect();
+            receiveThread.Abort();
+            Application.Exit();
+        }
+
+        private void statusError(string msg)
 		{
 			lblStatus.ForeColor = Color.FromArgb(255, 50, 50);
 			lblStatus.Text = msg;
@@ -53,7 +62,6 @@ namespace SimpleChatClient
 					lblServerInfo.Text = "当前聊天服务器：" + server;
 					lblUserInfo.Text = "当前昵称：" + nickname;
 					txtInput.ReadOnly = false;
-                    receiveThread = new System.Threading.Thread(ReceiveThread);
                     receiveThread.Start();
 					statusSuccess("服务器连接成功。");
 				}
@@ -74,7 +82,15 @@ namespace SimpleChatClient
                     BaseMessage msg = Program.Receive();
                     DoReceive(msg);
                 }
-                catch(SocketException)
+                catch (SocketException)
+                {
+                    break;
+                }
+                catch (ChatException e)
+                {
+                    DoReceive(new PrivateMessage("System", nickname, e.Message));
+                }
+                catch (System.Threading.ThreadAbortException)
                 {
                     break;
                 }
