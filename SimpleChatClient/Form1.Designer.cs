@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.btnNewChat = new System.Windows.Forms.Button();
 			this.txtInput = new System.Windows.Forms.TextBox();
@@ -40,7 +39,6 @@
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.btnClear = new System.Windows.Forms.Button();
 			this.lblMsgType = new System.Windows.Forms.Label();
-			this.timer1 = new System.Windows.Forms.Timer(this.components);
 			this.panel1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -158,11 +156,6 @@
 			this.lblMsgType.Text = "全体消息";
 			this.lblMsgType.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 			// 
-			// timer1
-			// 
-			this.timer1.Interval = 1000;
-			this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -206,7 +199,6 @@
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.Button btnClear;
 		private System.Windows.Forms.Label lblMsgType;
-		private System.Windows.Forms.Timer timer1;
 	}
 }
 

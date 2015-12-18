@@ -14,10 +14,29 @@ namespace SimpleChatClient
 {
     public partial class Form1 : Form
     {
-        public Form1()
+		System.Timers.Timer Timers_Timer = new System.Timers.Timer();
+		string server, nickname;
+
+		public Form1()
         {
             InitializeComponent();
         }
+
+		private void statusError(string msg)
+		{
+			lblStatus.ForeColor = Color.FromArgb(255, 50, 50);
+			lblStatus.Text = msg;
+        }
+
+		private void statusSuccess(string msg = "")
+		{
+			if (msg == "")
+			{
+				msg = "就绪。";
+			}
+			lblStatus.ForeColor = Color.FromArgb(255, 255, 255);
+			lblStatus.Text = msg;
+		}
 
 		private void btnNewChat_Click(object sender, EventArgs e)
 		{
@@ -26,42 +45,109 @@ namespace SimpleChatClient
 			{
 				try
 				{
-					string server = input_form.serverInfo();
-					string nickname = input_form.nickname();
+					server = input_form.serverInfo();
+					nickname = input_form.nickname();
 					Program.Connect(server);
 					Program.setNickname(nickname);
 					Program.SendLogin();
 					lblServerInfo.Text = "当前聊天服务器：" + server;
 					lblUserInfo.Text = "当前昵称：" + nickname;
 					txtInput.ReadOnly = false;
-					timer1.Enabled = true;
+					Timers_Timer.Interval = 500;
+					Timers_Timer.Enabled = true;
+					Timers_Timer.Elapsed += new System.Timers.ElapsedEventHandler(Timers_Timer_Elapsed);
+					statusSuccess("服务器连接成功。");
 				}
 				catch
 				{
-					lblStatus.Text = "服务器连接失败:(";
+					statusError("服务器连接失败:(");
 				}
 			}
 		}
 
+		void Timers_Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+		{
+			try
+			{
+				BaseMessage msg = Program.Receive();
+				if (msg.MsgType == "error")
+				{
+					ErrorMessage emsg = (ErrorMessage)msg;
+					MessageBox.Show(emsg.ErrorStr);
+				}
+				else
+				{
+					PublicMessage pbmsg;
+					PrivateMessage prmsg;
+					switch (msg.MsgType)
+					{
+						case "public":
+							pbmsg = (PublicMessage)msg;
+							if (txtMsg.Text != "")
+							{
+								txtMsg.Text += "\n";
+							}
+							txtMsg.Text += " -- " + pbmsg.FromNick + " 说：\n" + pbmsg.Content;
+							break;
+						case "private":
+							prmsg = (PrivateMessage)msg;
+							if (prmsg.ToNick == prmsg.FromNick)
+							{
+								return;
+							}
+							else if (prmsg.ToNick == nickname)
+							{
+								prmsg.ToNick = "你";
+							}
+							else
+							{
+								prmsg.ToNick = ' ' + prmsg.ToNick + ' ';
+							}
+							if (txtMsg.Text != "")
+							{
+								txtMsg.Text += "\n";
+							}
+							txtMsg.Text += " -- " + prmsg.FromNick + " 对" + prmsg.ToNick + "说：\n" + prmsg.Content;
+							break;
+					}
+				}
+			}
+			catch { }
+		}
 		private void btnSend_Click(object sender, EventArgs e)
 		{
 			string text = txtInput.Text;
+			if (text == "")
+			{
+				return;
+			}
 			try
 			{
+				if (txtMsg.Text != "")
+				{
+					txtMsg.Text += "\n";
+				}
 				if (lblMsgType.Text == "全体消息")
 				{
 					Program.SendPublic(text);
+					txtMsg.Text += " -- " + lblUserInfo.Text.Substring("当前昵称：".Length) + " 说：\n" + text;
 				}
 				else
 				{
 					string user = lblMsgType.Text.Substring(2, lblMsgType.Text.Length - 3);
 					Program.SendPrivate(user, text);
+					string said;
+					if (user == nickname)
+					{
+						said = "你自言自语：\n";
+					}
+					else
+					{
+						said = lblUserInfo.Text.Substring("当前昵称：".Length) + " 对 " + user + " 说：\n";
+                    }
+					txtMsg.Text += " -- " + said + text;
 				}
-				if (txtMsg.Text != "")
-				{
-					txtMsg.Text += "\n";
-				}
-				txtMsg.Text += lblUserInfo.Text.Substring("当前昵称：".Length) + "：\n" + text;
+				statusSuccess();
 			}
 			catch
 			{
@@ -70,20 +156,9 @@ namespace SimpleChatClient
 				{
 					textEllipse += "...";
 				}
-                lblStatus.Text = "消息 [" + textEllipse + "] 发送失败:(";
+                statusError("消息 [" + textEllipse + "] 发送失败:(");
 			}
 			txtInput.Text = "";
-		}
-
-		private void timer1_Tick(object sender, EventArgs e)
-		{
-			BaseMessage pmsg = Program.Receive();
-			Console.Out.WriteLine(pmsg.MsgType);
-			if (txtMsg.Text != "")
-			{
-				txtMsg.Text += "\n";
-			}
-			txtMsg.Text += pmsg;
 		}
 
 		private void txtInput_TextChanged(object sender, EventArgs e)
