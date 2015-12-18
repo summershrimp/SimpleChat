@@ -14,7 +14,7 @@ namespace SimpleChatClient
 {
     public partial class Form1 : Form
     {
-		System.Timers.Timer Timers_Timer = new System.Timers.Timer();
+        System.Threading.Thread receiveThread;
 		string server, nickname;
 
 		public Form1()
@@ -53,67 +53,85 @@ namespace SimpleChatClient
 					lblServerInfo.Text = "当前聊天服务器：" + server;
 					lblUserInfo.Text = "当前昵称：" + nickname;
 					txtInput.ReadOnly = false;
-					Timers_Timer.Interval = 500;
-					Timers_Timer.Enabled = true;
-					Timers_Timer.Elapsed += new System.Timers.ElapsedEventHandler(Timers_Timer_Elapsed);
+                    receiveThread = new System.Threading.Thread(ReceiveThread);
+                    receiveThread.Start();
 					statusSuccess("服务器连接成功。");
 				}
-				catch
+				catch(SocketException)
 				{
+                    receiveThread.Abort();
 					statusError("服务器连接失败:(");
 				}
 			}
 		}
+        private delegate void OnReceive(BaseMessage msg);
+        void ReceiveThread()
+        {
+            while (true)
+            {
+                try
+                {
+                    BaseMessage msg = Program.Receive();
+                    DoReceive(msg);
+                }
+                catch(SocketException)
+                {
+                    break;
+                }
+            }
+        }
+        void DoReceive(BaseMessage msg)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new OnReceive(DoReceive), msg);
+            }
+            else
+            {
 
-		void Timers_Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-		{
-			try
-			{
-				BaseMessage msg = Program.Receive();
-				if (msg.MsgType == "error")
-				{
-					ErrorMessage emsg = (ErrorMessage)msg;
-					MessageBox.Show(emsg.ErrorStr);
-				}
-				else
-				{
-					PublicMessage pbmsg;
-					PrivateMessage prmsg;
-					switch (msg.MsgType)
-					{
-						case "public":
-							pbmsg = (PublicMessage)msg;
-							if (txtMsg.Text != "")
-							{
-								txtMsg.Text += "\n";
-							}
-							txtMsg.Text += " -- " + pbmsg.FromNick + " 说：\n" + pbmsg.Content;
-							break;
-						case "private":
-							prmsg = (PrivateMessage)msg;
-							if (prmsg.ToNick == prmsg.FromNick)
-							{
-								return;
-							}
-							else if (prmsg.ToNick == nickname)
-							{
-								prmsg.ToNick = "你";
-							}
-							else
-							{
-								prmsg.ToNick = ' ' + prmsg.ToNick + ' ';
-							}
-							if (txtMsg.Text != "")
-							{
-								txtMsg.Text += "\n";
-							}
-							txtMsg.Text += " -- " + prmsg.FromNick + " 对" + prmsg.ToNick + "说：\n" + prmsg.Content;
-							break;
-					}
-				}
-			}
-			catch { }
-		}
+                if (msg.MsgType == "error")
+                {
+                    ErrorMessage emsg = (ErrorMessage)msg;
+                    MessageBox.Show(emsg.ErrorStr);
+                }
+                else
+                {
+                    PublicMessage pbmsg;
+                    PrivateMessage prmsg;
+                    switch (msg.MsgType)
+                    {
+                        case "public":
+                            pbmsg = (PublicMessage)msg;
+                            if (txtMsg.Text != "")
+                            {
+                                txtMsg.Text += "\n";
+                            }
+                            txtMsg.Text += " -- " + pbmsg.FromNick + " 说：\n" + pbmsg.Content;
+                            break;
+                        case "private":
+                            prmsg = (PrivateMessage)msg;
+                            if (prmsg.ToNick == prmsg.FromNick)
+                            {
+                                return;
+                            }
+                            else if (prmsg.ToNick == nickname)
+                            {
+                                prmsg.ToNick = "你";
+                            }
+                            else
+                            {
+                                prmsg.ToNick = ' ' + prmsg.ToNick + ' ';
+                            }
+                            if (txtMsg.Text != "")
+                            {
+                                txtMsg.Text += "\n";
+                            }
+                            txtMsg.Text += " -- " + prmsg.FromNick + " 对" + prmsg.ToNick + "说：\n" + prmsg.Content;
+                            break;
+                    }
+                }
+            }
+        }
 		private void btnSend_Click(object sender, EventArgs e)
 		{
 			string text = txtInput.Text;
