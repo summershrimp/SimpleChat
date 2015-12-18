@@ -49,6 +49,21 @@ namespace SimpleChatClient
 
 		private void btnNewChat_Click(object sender, EventArgs e)
 		{
+			if (btnNewChat.Text == "断开连接")
+			{
+				try
+				{
+					Program.Disconnect();
+					receiveThread.Abort();
+					btnNewChat.Text = "新聊天(&N)";
+					statusSuccess("连接已断开。");
+				}
+				catch
+				{
+					statusError("无法断开连接:(");
+				}
+                return;
+			}
 			frmInput input_form = new frmInput();
 			if (input_form.ShowDialog(this) == DialogResult.OK)
 			{
@@ -64,6 +79,8 @@ namespace SimpleChatClient
 					txtInput.ReadOnly = false;
                     receiveThread.Start();
 					statusSuccess("服务器连接成功。");
+					btnNewChat.Text = "断开连接";
+					txtInput.Focus();
 				}
 				catch(SocketException)
 				{
