@@ -20,7 +20,6 @@ namespace SimpleChatClient
 		public Form1()
         {
             InitializeComponent();
-            receiveThread = new System.Threading.Thread(ReceiveThread);
             this.FormClosed += Form1_FormClosed;
         }
 
@@ -77,6 +76,7 @@ namespace SimpleChatClient
 					lblServerInfo.Text = "当前聊天服务器：" + server;
 					lblUserInfo.Text = "当前昵称：" + nickname;
 					txtInput.ReadOnly = false;
+                    receiveThread = new System.Threading.Thread(ReceiveThread);
                     receiveThread.Start();
 					statusSuccess("服务器连接成功。");
 					btnNewChat.Text = "断开连接";

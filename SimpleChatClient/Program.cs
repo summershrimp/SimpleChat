@@ -23,7 +23,6 @@ namespace SimpleChatClient
         [STAThread]
         static void Main()
         {
-			clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 			Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
@@ -31,6 +30,7 @@ namespace SimpleChatClient
 
         public static void Connect(string ip)
         {
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPAddress[] ips = Dns.GetHostAddresses(ip);
             foreach (IPAddress eip in ips)
             {
@@ -101,7 +101,8 @@ namespace SimpleChatClient
 
         public static void Disconnect()
         {
-            clientSocket.Close();
+            if(clientSocket != null)
+                clientSocket.Close();
         }
 
     }
